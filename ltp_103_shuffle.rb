@@ -7,15 +7,20 @@ puts sorted_array
 puts
 
 shuffled_array = []
-while true
-  
-  for num in 0...sorted_array.size
-    arr_size = sorted_array.size
-    use_num = rand(0...arr_size)
-    shuffled_array.push(sorted_array[use_num])
-    sorted_array.delete_at(use_num)
+
+def shuffle_array(array_to_shuffle)
+  shuffled_array = []
+  while true
+    for num in 0...array_to_shuffle.size
+      arr_size = array_to_shuffle.size
+      use_num = rand(0...arr_size)
+      shuffled_array.push(array_to_shuffle[use_num])
+      array_to_shuffle.delete_at(use_num)
+    end
+    return shuffled_array
+    break
   end
-  break
 end
+
 puts "----- shuffled array -----"
-puts shuffled_array
+puts shuffle_array(sorted_array)
