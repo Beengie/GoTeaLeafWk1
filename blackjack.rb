@@ -1,5 +1,4 @@
 # Blackjack by Tim Watson V1.0
-# need to make dealer able to get more cards after > 17 with aces
 # need to make the deck reshuffle with used cards
 deck = [] # create deck array
 dealer_cards = []
