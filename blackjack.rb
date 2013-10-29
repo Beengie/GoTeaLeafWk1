@@ -1,4 +1,6 @@
 # Blackjack by Tim Watson V1.0
+# need to make dealer able to get more cards after > 17 with aces
+# need to make the deck reshuffle with used cards
 deck = [] # create deck array
 dealer_cards = []
 player_cards = []
@@ -11,13 +13,17 @@ number_of_decks = 1
 
 def add_cards(add_cards, hide = false) # add totals to cards
   value = 0
+  flag_ace = false
+  ace_count = 0
   # print add_cards[1]
-  add_cards.each do |c, s|
+  add_cards.each do |s, c|
     if hide == false
-      if s.is_a? Integer
-        value +=s
+      if c.is_a? Integer
+        value +=c
       else
-        if s == "Ace"
+        if c == "Ace"
+          flag_ace = true
+          ace_count += 1
           value +=11
         else
           value +=10
@@ -25,6 +31,13 @@ def add_cards(add_cards, hide = false) # add totals to cards
       end
     else
       hide = false
+    end
+  end
+  if ace_count != 0
+    if flag_ace == true && value > 21
+      for aces in 1..ace_count.times
+        value -= 10
+      end
     end
   end
   return value
@@ -62,7 +75,7 @@ def return_hand(card_to_return, dealers_init) # return entire hand in a string
   return hand_string
 end
 
-def make_deck(number_of_decks, deck)
+def make_decks(number_of_decks, deck)
   for loop_num in 1..number_of_decks
     for suit_num in 1..4 # set suits
       case suit_num
@@ -94,11 +107,13 @@ def make_deck(number_of_decks, deck)
       end
     end
   end
+  puts "Cards in deck: #{deck.size}"
 end
 
 def deal_a_card(which_player, which_hand, deck, dealers_init = false)
   get_card = rand(1...deck.size)
   which_hand.push(deck[get_card])
+  sleep 1.25
   if which_player == "Dealer"
     if dealers_init == false
       say "Dealer", "dealt #{return_card(deck[get_card])}"
@@ -138,8 +153,7 @@ end
 def hand_end_print(player_cards, dealer_cards, player_name, dealers_hand_value, players_hand_value)
   puts
   puts "-------- Hand values and cards --------"
-  say "Dealer", "Dealer's hand showing (#{return_hand(dealer_cards, false)})"
-  say "Dealer", "Dealer has a value of #{dealers_hand_value} -- (hide)"
+  say "Dealer", "Dealer's score is #{dealers_hand_value} cards are: (#{return_hand(dealer_cards, false)})"
   say player_name, "hand (#{return_hand(player_cards, false)})"
   say player_name, "You have a value of #{players_hand_value}"
   puts "---------------------------------------"
@@ -149,7 +163,6 @@ end
 # puts "Array size is: #{deck.size}"
 def deal_cards(deck, player_cards, dealer_cards, which_player)
   for num in 1..4
-    sleep 1.25
     case num % 2
     when 1
       deal_a_card(which_player, player_cards, deck)
@@ -163,15 +176,49 @@ def deal_cards(deck, player_cards, dealer_cards, which_player)
   end
 end
 
-make_deck(number_of_decks, deck)
+# make_decks(number_of_decks, deck)
 puts
 puts "----- PlayBlackjack ver. 1.0 by Tim Watson ------"
 puts
 say "Enter your name:"
-player_name = "Tim"
-# player_name = gets.chomp
-# player_name.capitalize!
-say "Welcome #{player_name}. Here is the first round of hands with a brand new deck..."
+player_name = gets.chomp
+player_name.capitalize!
+say "Welcome #{player_name}."
+
+while true
+say "How many decks would you like to play with?"
+ user_decks = gets.chomp
+ user_decks = user_decks.to_i
+  if user_decks.is_a? Integer
+    make_decks(user_decks, deck)
+    break
+  else
+    say "Please enter a number."
+  end
+end
+
+def hit_or_stay
+  puts "Would you like to (H)it or (S)tay?"
+  hit_stay = gets.chomp
+  hit_stay.downcase!
+  while true
+    if hit_stay != "h" && hit_stay != "s"
+      say "Invalid entry. Please enter (H)it or (S)tay."
+    else
+      return hit_stay
+    end
+  end
+end
+
+def show_dealer_val_and_hand(dealers_hide_value, dealer_cards)
+  puts "The dealer shows a value of #{dealers_hide_value} - (#{return_hand(dealer_cards, true)})"
+end
+
+def show_player_val_and_hand(players_hand_value, player_cards, player_name)
+  say "#{player_name}, you have a value of #{players_hand_value} - (#{return_hand(player_cards, false)})"
+end
+
+say "Here is the first round of hands with a brand new deck..."
 puts
 
 deal_cards(deck, player_cards, dealer_cards, player_name)
@@ -182,17 +229,17 @@ catch (:exit) do
       when true
         if is_blackjack(player_cards) && is_blackjack(dealer_cards)
           puts "#{player_name}, both you and the dealer have blackjack (push)"
-          hand_end_print(player_cards, dealer_cards, player_name)
+          hand_end_print(player_cards, dealer_cards, player_name, dealers_hand_value, players_hand_value)
           winner = true
         elsif is_blackjack(player_cards)
           puts "-----------------------"
           puts "#{player_name}, you won with blackjack!"
-          hand_end_print(player_cards, dealer_cards, player_name)
+          hand_end_print(player_cards, dealer_cards, player_name, dealers_hand_value, players_hand_value)
           winner = true
         elsif is_blackjack(dealer_cards)
           puts "-----------------------"
           puts "The dealer won with blackjack!"
-          hand_end_print(player_cards, dealer_cards, player_name)
+          hand_end_print(player_cards, dealer_cards, player_name, dealers_hand_value, players_hand_value)
           winner = true
         end
         first_deal = false
@@ -202,46 +249,45 @@ catch (:exit) do
         dealers_hide_value = add_cards(dealer_cards, true)
         players_hand_value = add_cards(player_cards)
         puts
-        puts "--------------- will hide ---------------"
-        puts "Dealer's hand showing (#{return_hand(dealer_cards, false)}) - (hide)"
-        puts "Dealer has a value of #{dealers_hand_value} -- (hide)"
-        puts "-----------------------------------------"
-        puts "The dealer shows a value of #{dealers_hide_value} - (#{return_hand(dealer_cards, true)})"
+        # puts "--------------- will hide ---------------"
+        # puts "Dealer's hand showing (#{return_hand(dealer_cards, false)}) - (hide)"
+        # puts "Dealer has a value of #{dealers_hand_value} -- (hide)"
+        # puts "-----------------------------------------"
+        show_dealer_val_and_hand(dealers_hide_value, dealer_cards)
         puts
-        # say "#{player_name}'s hand (#{return_hand(player_cards, false)})"
-        say "#{player_name}, you have a value of #{players_hand_value} - (#{return_hand(player_cards, false)})"
+        show_player_val_and_hand(players_hand_value, player_cards, player_name)
         puts
-        puts "Would you like to (H)it or (S)tay?"
-        hit_stay = gets.chomp
-        hit_stay.downcase!
-        puts
-        if hit_stay == "h" # hit
-          deal_a_card(player_name, player_cards, deck) # deal a card
-          players_hand_value = add_cards(player_cards)
-          if players_hand_value > 21 
-            winner = have_winner(player_cards, dealer_cards, player_name)
-          elsif dealers_hand_value < 17  # is the dealer's hand less than 17?
-            deal_a_card("Dealer", dealer_cards, deck) # give the dealer a card
-            dealers_hand_value = add_cards(dealer_cards)  # update hand value
-            dealers_hide_value = add_cards(dealer_cards, true)
-          elsif dealers_hand_value > 21
-            winner = have_winner(player_cards, dealer_cards, player_name)
+        
+        while true
+          hit_stay = hit_or_stay
+          if hit_stay == "h" # hit
+            deal_a_card(player_name, player_cards, deck) # deal a card
+            players_hand_value = add_cards(player_cards)
+            show_player_val_and_hand(players_hand_value, player_cards, player_name)
+            if players_hand_value > 21 
+              winner = have_winner(player_cards, dealer_cards, player_name)
+              break
+            end
+          else
+            break
           end
-        elsif "s" # player stays
+        end
+
+        if hit_stay == "s" # player stays
           catch (:done) do
             while dealers_hand_value < 17 # is dealer's hand less than 17?
               deal_a_card("Dealer", dealer_cards, deck) # give the dealer a card
               dealers_hand_value = add_cards(dealer_cards) # update hand value
               dealers_hide_value = add_cards(dealer_cards, true)
+              show_dealer_val_and_hand(dealers_hide_value, dealer_cards)
               if dealers_hand_value > players_hand_value || dealers_hand_value == players_hand_value
                 throw :done
               end
             end
           end
+
           # dealer's hand is bigger than 17      
           winner = have_winner(player_cards, dealer_cards, player_name)
-        else
-          say "Invalid entry. Please enter (H)it or (S)tay."
         end
       end
     end
@@ -253,12 +299,12 @@ catch (:exit) do
       if play_again == "n"
         say "Thank you for playing Blackjack\nGoodbye"
         throw :exit
-      elsif play_again = "y"
+      elsif play_again == "y"
         puts "Cards in deck: #{deck.size}"
         dealer_cards =[]
         player_cards = []
         winner = false
-        first_deal = false
+        first_deal = true
         deal_cards(deck, player_cards, dealer_cards, player_name)
         break
       else
